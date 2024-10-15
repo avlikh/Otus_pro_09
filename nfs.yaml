@@ -1,0 +1,114 @@
+---
+- name   : Define variables
+  hosts  : localhost
+  gather_facts : no
+  vars_files:
+    - vars/vars_file.yml
+
+  tasks:
+    - name: Add nfs server host
+      add_host:
+        name         : "{{ nfs_server_name }}" 
+        ansible_host : "{{ nfs_server_ip }}"
+        groups       :  nfs_server_name
+
+    - name: Add nfs client host
+      add_host:
+        name         : "{{ nfs_client_name }}" 
+        ansible_host : "{{ nfs_client_ip }}"
+        groups       :  nfs_client_name
+
+- name: add correct repositories and upadte app cache
+  hosts: nfs_server_name, nfs_client_name
+  become: yes
+  tasks:
+    - name: copy sources.list
+      copy:
+        src   : /ansible/files/all/etc/apt/sources.list
+        dest  : /etc/apt/sources.list
+        owner : root
+        group : root
+        mode  : '0644'
+        backup: yes
+
+    - name: Update repositories cache and apt
+      ansible.builtin.apt:
+        update_cache: yes
+
+- name: Setup nfs server
+  hosts: nfs_server_name
+  become: yes
+  vars_files:
+    - vars/vars_file.yml
+  tasks:
+    - name: Install NFS server packages
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Add nfs client to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ nfs_client_ip }} {{ nfs_client_name }}"
+        create: yes
+
+    - name: Create export directory
+      ansible.builtin.file:
+        path: "{{ server_directory }}"
+        state: directory
+        mode: '0755'
+    
+    - name: Create upload directory
+      ansible.builtin.file:
+        path: "{{ server_directory }}/upload"
+        state: directory
+        mode: '0777'
+    
+    - name: Configure NFS exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "{{ server_directory }} {{ nfs_client_name }}(rw,root_squash,sync,no_subtree_check)"
+        create: yes 
+  
+    - name: Restart NFS server
+      ansible.builtin.service:
+        name: nfs-kernel-server
+        state: restarted
+  
+  
+- name: Mount NFS share on client
+  hosts: nfs_client_name
+  become: yes
+  vars_files:
+    - vars/vars_file.yml 
+  tasks:
+    - name: Install NFS client packages
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+
+    - name: Add nfs server to /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ nfs_server_ip }} {{ nfs_server_name }}"
+        create: yes
+
+    - name: Create mount point
+      ansible.builtin.file:
+        path: "{{ client_directory }}"
+        state: directory
+  
+    - name: Configure NFS client fstabs
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "{{ nfs_server_name }}:{{ server_directory }} {{ client_directory }} nfsvers=3,noauto,x-systemd.automount rw 0 0"
+        create: yes 
+  
+    - name: Execute command mount nfs share
+      ansible.builtin.shell: 
+        cmd: "systemctl daemon-reload && mount -a"
+
+    - name: Display message
+      debug:
+        msg: "You can find NFS share mounted to: {{ client_directory }}. You can add files to: {{ client_directory }}/upload"
+...

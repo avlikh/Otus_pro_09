@@ -1,0 +1,13 @@
+    # define nfs_server name and ip:
+    nfs_server_name: testdeb1
+    nfs_server_ip: 10.68.7.11
+
+    # define nfs_client name and ip:
+    nfs_client_name: testdeb2
+    nfs_client_ip: 10.68.7.12
+
+    # define nfs_server export directory:
+    server_directory: /nfs_share
+
+    # define nfs_client nfs mount directory:
+    client_directory: /nfs_share
