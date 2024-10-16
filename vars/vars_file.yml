@@ -1,22 +1,22 @@
 # define nfs_server name and ip:
 # Note! You can't add another NFS servers here! 
-# Please change name and ip to your:
+# Please change name and ip to yours:
 nfs_servers:
    - name: testdeb1
      ip: 10.68.7.11
 
 # define nfs_client name and ip:
-# Please change name and ip to your.
-# Note: If you have few nfs clients, please uncomment strings bellow and change name and ip to your and anotherstrings it it need. 
+# Please change name and ip to yours.
+# Note: If you have few nfs clients, please uncomment strings bellow and change name and ip to yours
+# you can add extra strings if it needed. 
 nfs_clients:
   - name: testdeb2
     ip: 10.68.7.12
 #  - name: testdeb3
-#    ip: 10.68.7.17
+#    ip: 10.68.7.14
 
 # define nfs_server export directory:
 server_directory: /nfs_share
 
 # define nfs_client nfs mount directory:
 client_directory: /nfs_share
-
