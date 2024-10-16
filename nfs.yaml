@@ -101,7 +101,7 @@
     - name: Configure NFS client fstabs
       ansible.builtin.lineinfile:
         path: /etc/fstab
-        line: "{{ nfs_server_name }}:{{ server_directory }} {{ client_directory }} nfsvers=3,noauto,x-systemd.automount rw 0 0"
+        line: "{{ nfs_server_name }}:{{ server_directory }} {{ client_directory }} nfs,nfsvers=3,proto-tcp,noauto rw 0 0"
         create: yes 
   
     - name: Execute command mount nfs share
