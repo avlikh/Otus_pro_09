@@ -77,8 +77,7 @@
     - name: Restart NFS server
       ansible.builtin.service:
         name: nfs-kernel-server
-        state: restarted
-  
+        state: restarted  
   
 - name: Mount NFS share on client
   hosts: nfs_clients
