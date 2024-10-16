@@ -21,7 +21,7 @@
       loop: "{{ nfs_clients }}"
 
 - name: add correct repositories and upadte app cache
-  hosts: nnfs_servers, nfs_clients
+  hosts: nfs_servers, nfs_clients
   become: yes
   tasks:
     - name: copy sources.list
