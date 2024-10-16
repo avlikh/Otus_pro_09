@@ -8,18 +8,20 @@
   tasks:
     - name: Add nfs server host
       add_host:
-        name         : "{{ nfs_server_name }}" 
-        ansible_host : "{{ nfs_server_ip }}"
-        groups       :  nfs_server_name
+        name         : "{{ item.name }}" 
+        ansible_host : "{{ item.ip }}"
+        groups       :  nfs_servers
+      loop: "{{ nfs_servers }}"
 
     - name: Add nfs client host
       add_host:
-        name         : "{{ nfs_client_name }}" 
-        ansible_host : "{{ nfs_client_ip }}"
-        groups       :  nfs_client_name
+        name         : "{{ item.name }}" 
+        ansible_host : "{{ item.ip }}"
+        groups       :  nfs_clients
+      loop: "{{ nfs_clients }}"
 
 - name: add correct repositories and upadte app cache
-  hosts: nfs_server_name, nfs_client_name
+  hosts: nnfs_servers, nfs_clients
   become: yes
   tasks:
     - name: copy sources.list
@@ -36,7 +38,7 @@
         update_cache: yes
 
 - name: Setup nfs server
-  hosts: nfs_server_name
+  hosts: nfs_servers
   become: yes
   vars_files:
     - vars/vars_file.yml
@@ -49,8 +51,9 @@
     - name: Add nfs client to /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
-        line: "{{ nfs_client_ip }} {{ nfs_client_name }}"
+        line: "{{ item.ip }} {{ item.name }}"
         create: yes
+      loop: "{{ nfs_clients }}"
 
     - name: Create export directory
       ansible.builtin.file:
@@ -67,8 +70,9 @@
     - name: Configure NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
-        line: "{{ server_directory }} {{ nfs_client_name }}(rw,root_squash,sync,no_subtree_check)"
-        create: yes 
+        line: "{{ server_directory }} {{ item.name }}(rw,root_squash,sync,no_subtree_check)"
+        create: yes
+      loop: "{{ nfs_clients }}"
   
     - name: Restart NFS server
       ansible.builtin.service:
@@ -77,7 +81,7 @@
   
   
 - name: Mount NFS share on client
-  hosts: nfs_client_name
+  hosts: nfs_clients
   become: yes
   vars_files:
     - vars/vars_file.yml 
@@ -90,8 +94,9 @@
     - name: Add nfs server to /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
-        line: "{{ nfs_server_ip }} {{ nfs_server_name }}"
+        line: "{{ item.ip }} {{ item.name }}"
         create: yes
+      loop: "{{ nfs_servers }}"
 
     - name: Create mount point
       ansible.builtin.file:
@@ -101,7 +106,7 @@
     - name: Configure NFS client fstabs
       ansible.builtin.lineinfile:
         path: /etc/fstab
-        line: "{{ nfs_server_name }}:{{ server_directory }} {{ client_directory }} nfs,nfsvers=3,proto-tcp,noauto rw 0 0"
+        line: "{{ nfs_servers.0.name }}:{{ server_directory }} {{ client_directory }} nfs,nfsvers=3,proto-tcp,noauto rw 0 0"
         create: yes 
   
     - name: Execute command mount nfs share
