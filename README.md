@@ -18,7 +18,7 @@ apt update -y && apt install git -y ; git clone https://github.com/avlikh/Otus_p
 
 ### 4) Выполните данную команду на удаленной машине. Будет запущен playbook, который настроит nfs-сервер и nfs-клиент.
 ```
-cd /ansible/ && ansible-playbook nfs.yaml -u root --ask-pass;
+cd /ansible/ && ansible-playbook nfs.yaml -u root --ask-pass
 ```
    - Вам потребуется ввести пароль пользователя root для подключения Ansible к удаленной машине (я не использовал rsa-ключи, что бы облегчить Вам прием этого ДЗ) 
 
